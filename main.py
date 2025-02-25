@@ -82,10 +82,11 @@ class genetic_algorithm():
                 "b":self.Fit_Pb[i],
                 "a":self.Fit_Pa[i]
                 }
-            
+        
             P.append(P_dict[max(dict, key=dict.get)][i])
             dict.pop(max(dict, key=dict.get))
             P.append(P_dict[max(dict, key=dict.get)][i])
+
         random.shuffle(P)
         if len(P) != self.N:
             print("Error! something went wrong with culling the population")
@@ -97,13 +98,16 @@ class genetic_algorithm():
         average_fitness = sum(self.Fit_Pa + self.Fit_Pb)/self.N
         print(f"Average fitness gen {self.generation}: {average_fitness}, Highest Fitness: {max(self.Fit_Pa + self.Fit_Pb)} ")
 
+
     def calc_end(self):
+        
         tot_fit = self.Fit_Pa + self.Fit_Pb
         if G in (tot_fit):
             print(f"Global Optimum Found: {max(tot_fit)}, Generation: {self.generation}, Average Fitness: {sum(self.Fit_Pa + self.Fit_Pb)/self.N}, Population size: {self.N}")
             print(f"Specifications. Fitness method: {self.FitnessMethod}, Crossover method: {self.TransferMethod}, d value: {self.d}, is tightly linked: {self.blnTgtLnkd}")
             return True
         max_fit = max(tot_fit)
+        #print(self.countdown,max_fit,self.highestFitness,max_fit > self.highestFitness)
         if max_fit > self.highestFitness:
             self.countdown = 0
             self.highestFitness = max_fit
@@ -117,7 +121,7 @@ class genetic_algorithm():
             self.N = self.N*2
             print(f"Local Optimum found: {max(tot_fit)}, Restarting with N = {self.N}.")
             self.countdown = 0
-            
+            self.highestFitness = 0
             self.generation = 0
             self.generate_population()
 
@@ -166,7 +170,7 @@ class genetic_algorithm():
             self.generation = self.generation + 1
             #self.show()
 
-GA = genetic_algorithm("TF","2X",2.5, True)
+GA = genetic_algorithm("TF","2X",2.5, False)
 GA.run()
         
         
