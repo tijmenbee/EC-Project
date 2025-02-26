@@ -181,7 +181,40 @@ class genetic_algorithm():
             self.countdown = self.countdown + 1
             return False
     
-    
+    def generate_graph(self):
+        plt.ion()  # Turn on interactive mode
+        fig, self.ax = plt.subplots()
+        self.x_data, self.y_data = [], []
+
+        # Set up the plot
+        self.ax.set_xlim(0, 50)  # X-self.axis limit
+        self.ax.set_ylim(0, 100)  # Y-self.axis limit
+        self.line, = self.ax.plot([], [], 'b-o', label="Dynamic Data")  # Blue line with dots
+
+        plt.xlabel("Time")
+        plt.ylabel("Random Value")
+        plt.title("Real-Time Dynamic Graph")
+        plt.legend()
+
+    def update_graph(self): # Not finished
+        
+        self.x_data.append(i)
+        self.y_data.append(random.randint(0, 100))  # Generate a random value
+
+        # Update plot data
+        self.line.set_xdata(self.x_data)
+        self.line.set_ydata(self.y_data)
+        
+        # Adjust limits dynamically
+        self.ax.relim()
+        self.ax.autoscale_view()
+
+        plt.draw()
+        plt.pause(0.1)  # Pause for a short interval to simulate real-time update
+
+        plt.ioff()  # Turn off interactive mode after completion
+        plt.show()
+
     def run(self):
         self.successful_runs = 0
         self.run_count = 0 
