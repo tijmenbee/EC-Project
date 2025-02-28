@@ -101,6 +101,9 @@ class genetic_algorithm():
 
     # Check if the algorithm is progressing
     def is_progressing(self, tot_fit,):
+        if G in (tot_fit):
+            #self.generation += 20
+            return False
         max_fit = max(tot_fit)
 
         if max_fit > self.highestFitness:
@@ -122,17 +125,21 @@ class genetic_algorithm():
         best_N = high
         
         while high - low >= 10: # Search until the range is less than 10
-            print(low, high)
             mid = (low + high) // 2
             mid = round(mid / 10) * 10  # Ensure population size is a multiple of 10
             self.N = mid
             successful_runs = 0
+            cpu_times = []
+            generations = []
+            average_fitness = []
+
 
             # Run the GA 10 times for this population size
             for _ in range(10):
+                start_time = time.process_time()  # Start time for one experiment
                 self.generate_population()
                 self.highestFitness = 0
-                self.generation = 0
+                generation = 0
                 tot_fit = self.Fit_Pa + self.Fit_Pb
 
                 # Run the GA until it stops progressing
@@ -140,15 +147,24 @@ class genetic_algorithm():
                     self.crossover()
                     self.pass_fitness_function()
                     self.cull_population()
-                    self.generation += 1
+                    generation += 1
                     tot_fit = self.Fit_Pa + self.Fit_Pb
+
+                end_time = time.process_time()  # End time for one experiment
+                elapsed_time = end_time - start_time
+                cpu_times.append(elapsed_time)
+                generations.append(generation)
+                fitness = sum(self.Fit_Pa + self.Fit_Pb)/self.N
+                average_fitness.append(fitness)
 
                 # Check if the GA found the optimal solution, then increment the counter
                 if G in tot_fit:  
                     successful_runs += 1
 
             print(f"Population Size: {mid}, Successful Runs: {successful_runs}/10")
-            
+            print(f"Average time over 10 runs: {np.mean(cpu_times)} seconds and standard deviation over 10 runs: {np.std(cpu_times)} seconds")
+            print(f"Average generations over 10 runs: {np.mean(self.generations)} and standard deviation over 10 runs: {np.std(self.generations)}")
+            print(f"Average fitness over 10 runs: {np.mean(average_fitness)}")
             if successful_runs >= 9:  
                 best_N = mid  
                 high = mid  
@@ -162,6 +178,7 @@ class genetic_algorithm():
         
         tot_fit = self.Fit_Pa + self.Fit_Pb
         if G in (tot_fit):
+            #self.generation += 20
             self.successful_runs += 1  
             return True
         max_fit = max(tot_fit)
@@ -174,7 +191,6 @@ class genetic_algorithm():
         elif self.countdown > 19: 
             self.countdown = 0
             self.highestFitness = 0
-            self.generation = 0
             self.generate_population()
             return True
         else: 
@@ -218,12 +234,17 @@ class genetic_algorithm():
     def run(self):
         self.successful_runs = 0
         self.run_count = 0 
+        self.times = []
+        self.generations = []
+        average_fitness = []
 
         # Keep running until either the population size exceeds 1280 or the optimal solution is found
         while True:
+            start_time = time.process_time()  # Start time for one experiment
             self.generate_population()
             self.highestFitness = 0
             self.generation = 0
+
 
             # Run the GA until it stops progressing
             while not self.calc_end():
@@ -232,16 +253,26 @@ class genetic_algorithm():
                 self.cull_population()
                 self.generation += 1
             
+            end_time = time.process_time()  # End time for one experiment
+            elapsed_time = end_time - start_time
+            self.times.append(elapsed_time)
+            self.generations.append(self.generation)
+            fitness = sum(self.Fit_Pa + self.Fit_Pb)/self.N
+            average_fitness.append(fitness)
             self.run_count += 1  # Count each run
 
             if self.run_count >= 10:  # After 10 runs, decide what to do
+                avg_time = np.mean(self.times)
+                std_time = np.std(self.times)
                 print(f"Population Size: {self.N}, Successful Runs: {self.successful_runs}/10")
-
+                print(f"Average time over 10 runs: {avg_time:.4f} seconds and the standard deviation over 10 runs: {std_time:.4f} seconds")
+                print(f"Average generations over 10 runs: {np.mean(self.generations)} and the standard deviation over 10 runs: {np.std(self.generations)}")
+                print(f"Average fitness over 10 runs: {np.mean(average_fitness)}")
                 if self.successful_runs >= 9:  # If 9 or more were successful, proceed to bisection
                     self.bisection_search()
                     return  
 
-                # Otherwise, double the population and reset counters
+                # Otherwise, double the population and reset Scounters
                 self.N *= 2
                 if self.N > 1280:
                     print("Population size exceeded 1280. Terminating.")            
@@ -249,10 +280,14 @@ class genetic_algorithm():
                 print(f"Not enough successful runs. Increasing population to N = {self.N}. Restarting 10 runs.")
                 self.successful_runs = 0  
                 self.run_count = 0
+                self.times = []
+                self.generations = []
+                average_fitness = []
+
         
         
     
-GA = genetic_algorithm("CO", "2X", 2.5, True)
+GA = genetic_algorithm("TF", "UX", 3.9, False)
 GA.run()
             
 
