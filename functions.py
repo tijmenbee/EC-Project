@@ -11,7 +11,7 @@ def Gen_Pop(N, G): #Create random population
         P.append([random.randint(0, 1) for _ in range(G)])
     return P
 
-def Crossover_List(a, b, method = "UX"): # Crossover of an entire list
+def Crossover_List(a, b, method): # Crossover of an entire list
     
     if len(a) != len(b):
         print("Error! parents cannot crossover")
@@ -20,28 +20,34 @@ def Crossover_List(a, b, method = "UX"): # Crossover of an entire list
     children_b = []
     
     for i in range(len(a)):
-        children_a.append(Crossover(a[i],b[i],method))
-        children_b.append(Crossover(a[i],b[i],method))
+        child1, child2 = Crossover(a[i],b[i],method)
+        children_a.append(child1)
+        children_b.append(child2)
     return children_a , children_b
 
-def Crossover(a, b, method = "UX"):  #Crossover of two individuals
-    child = []
+def Crossover(a, b, method):  #Crossover of two individuals
+    child1 = []
+    child2 = []
     if method == "UX":
         if bool(random.getrandbits(1)):
             a, b = b, a
         for i in range(len(a)):
             if bool(random.getrandbits(1)):
-                child.append(a[i])
-            else: child.append(b[i])
+                child1.append(a[i])
+                child2.append(b[i])
+            else: 
+                child1.append(b[i])
+                child2.append(a[i])
     
     elif method == "2X":
         if bool(random.getrandbits(1)):
             a, b = b, a
         cutoff = random.randint(0, len(a))
         cutoff2 = random.randint(cutoff, len(a))
-        child = b[0:cutoff] + a[cutoff:cutoff2] + b[cutoff2:]
+        child1 = b[0:cutoff] + a[cutoff:cutoff2] + b[cutoff2:]
+        child2 = a[0:cutoff] + b[cutoff:cutoff2] + a[cutoff2:]
 
-    return child
+    return child1, child2
 
 def Fitness_CO(a): # Count Fitness
     return sum(a)
