@@ -55,13 +55,15 @@ def Fitness_CO(a): # Count Fitness
 def Fitness_TF(a,d,k,blnTgtLnkd): # Trap function, d is fitness deceptiveness, k is lenght of bit string, blnTgtLnkd is either tightly or loosly linked
     
     if blnTgtLnkd:
-        l = [list(c) for c in mit.divide(k, a)]
+        l = [list(c) for c in mit.divide(int(len(a)/k), a)]
+       
     else:
         l = mit.distribute(int(len(a)/k), a)
         l = [list(c) for c in l]
     lst = []
     for i in l:
         lst.append(B(i, d))
+        
 
     return round(sum(lst),2)
 
