@@ -58,20 +58,22 @@ def local_search(Graph):
     while max(Graph.dictGainA.values()) + max(Graph.dictGainB.values()) > 0:
         Graph.swap_nodes()
         if Graph.FM_passes > 10000: break
-    Graph.fitness = calc_fitness(Graph)
-    return Graph, calc_fitness(Graph)
+    return Graph, Graph.calc_fitness()
 
-def multi_start_local_search(objGraph, intNumStarts):
+def multi_start_local_search(objGraph, intMaxPasses):
     # Track best solution found
-    best_fitness = 500
+    
     Graph = objGraph()
+    best_fitness = Graph.fitness
+
     # Run local search multiple times with different random starts
-    for i in range(intNumStarts):
+    i = 0
+    while Graph.FM_passes < intMaxPasses:
         Graph = objGraph(Graph.FM_passes)
         Graph, fitness = local_search(Graph)
         # Update best solution if current solution is better
- 
         print("Search: ", i, "Fitness: ", fitness, "Best fitness: ", best_fitness)
+        i += 1
         if fitness < best_fitness:
             best_fitness = fitness
             best_Graph = Graph
@@ -90,7 +92,7 @@ def iterative_local_search(objGraph, mutation_rate, max_passes):
         
         Graph.free_nodes()
         Graph, fitness = local_search(Graph)
-        print(f"Search Count: {search_count}, Fitness: {fitness}, Best fitness: {best_fitness}")
+        print(f"Search Count: {search_count}, Fitness: {fitness}, Best fitness: {best_fitness}, Passes: {Graph.FM_passes}")
         if fitness < best_fitness:
 
             best_fitness = fitness
@@ -100,11 +102,19 @@ def iterative_local_search(objGraph, mutation_rate, max_passes):
     return best_Graph, best_fitness
 
 def random_perturbation(Graph, mutation_rate):
-    random.shuffle(Graph.partitionA)
-    random.shuffle(Graph.partitionB)
-    for i in range(len(Graph.partitionA)):
+   # Get list of nodes in partition B (where dictPart value is 1)
+    lstNodePartB = [node for node, part in Graph.dictPart.items() if part == 1]
+    lstNodePartA = [node for node, part in Graph.dictPart.items() if part == 0]
+    
+    # Randomly swap nodes between partitions based on mutation rate
+    for NodeKey in lstNodePartA:
         if random.random() < mutation_rate:
-            Graph.partitionA[i], Graph.partitionB[i] = Graph.partitionB[i], Graph.partitionA[i]
+            # Swap partition assignments (bit flip)
+            Graph.dictPart[NodeKey] = 1 - Graph.dictPart[NodeKey]  # Flips 0 to 1 or 1 to 0
+            randomNode = random.choice(lstNodePartB)
+            lstNodePartB.remove(randomNode)
+            Graph.dictPart[randomNode] = 1 - Graph.dictPart[randomNode]  # Flips 0 to 1 or 1 to 0
+            
     return Graph
 
 def genetic_local_search(objGraph, max_passes, population_size = 2):
