@@ -186,3 +186,7 @@ class G:
                     fit_score = fit_score + 1
         self.fitness = fit_score
         return fit_score
+    def invert_bits(self):
+
+        for node in self.lstKeys:
+            self.dictPart[node] = 1 - self.dictPart[node]

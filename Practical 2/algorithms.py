@@ -117,7 +117,7 @@ def random_perturbation(Graph, mutation_rate):
             
     return Graph
 
-def genetic_local_search(objGraph, max_passes, population_size = 2):
+def genetic_local_search(objGraph, population_size, max_passes):
     population = []
     for i in range(population_size):
         print("Growing population: ", i, "of", population_size)
@@ -125,49 +125,58 @@ def genetic_local_search(objGraph, max_passes, population_size = 2):
         Graph, _ = local_search(Graph)
         population.append({"Graph": Graph, "fitness": Graph.fitness, "FM_passes": Graph.FM_passes})
     print([x["fitness"] for x in population])
-
-    while sum([x["FM_passes"] for x in population]) < max_passes:
-        print(sum([x["FM_passes"] for x in population]))
+    intTotalFM_passes = sum([x["FM_passes"] for x in population])
+    while intTotalFM_passes < max_passes:
+        best_fitness = min(population, key=lambda x: x["fitness"])["fitness"]
+        print(f"FM_passes: {intTotalFM_passes}, Best fitness: {best_fitness}, Average Fitness: {sum([x['fitness'] for x in population])/len(population)}")
         parent1, parent2 = random.sample(population, 2)
         child = uniform_crossover(parent1["Graph"], parent2["Graph"], objGraph())
         child.free_nodes()
         child, _ = local_search(child)
-        print(child.fitness, max(population, key=lambda x: x["fitness"])["fitness"])
-        if child.fitness < max(population, key=lambda x: x["fitness"])["fitness"]:
-            child.FM_passes = max(population, key=lambda x: x["fitness"])["Graph"].FM_passes
+        intTotalFM_passes = child.FM_passes + intTotalFM_passes
+        if child.fitness <= max(population, key=lambda x: x["fitness"])["fitness"]:
             population.remove(max(population, key=lambda x: x["fitness"]))
             population.append({"Graph": child, "fitness": child.fitness, "FM_passes": child.FM_passes})
-        print(sum([x["fitness"] for x in population])/len(population))
+
+        if sum([x['fitness'] for x in population])/len(population) == best_fitness:
+            stop_counter += 1
+        else: stop_counter = 0
+        if stop_counter == 100: break
+
+    print(f"Max fitness: ", min(population, key=lambda x: x["fitness"])["fitness"])   
     return max(population, key=lambda x: x["fitness"])["Graph"]
 
-def uniform_crossover(graph1, graph2, child):
-    graph1.sort()
-    graph2.partit
-    child.partitionA = []
-    child.partitionB = []
-    PartitionAA_simliarity = sum([1 for node in graph1.partitionA if node in graph2.partitionA])
-    PartitionBA_simliarity = sum([1 for node in graph1.partitionB if node in graph2.partitionA])
+def hamming_distance(graph1, graph2):
+    # Calculate number of positions where partitions differ between two graphs
+    distance = 0
+    for node in graph1.lstKeys:
+        if graph1.dictPart[node] != graph2.dictPart[node]:
+            distance += 1
+    return distance
 
-    if PartitionAA_simliarity > PartitionBA_simliarity:
-        for i in range(len(graph1.partitionA)):
-            if random.random() < 0.5:
-                if i in graph1.partitionA:
-                    child.partitionA.append(i)
-                else:
-                    child.partitionB.append(i)
-            else:
-                child.partitionA.append(graph2.partitionA[i])
-                child.partitionB.append(graph1.partitionB[i])
-    else:
-        for i in range(len(graph1.partitionA)):
-            if random.random() < 0.5:
-                child.partitionA.append(graph1.partitionB[i])
-                child.partitionB.append(graph2.partitionA[i])
-            else:
-                child.partitionA.append(graph2.partitionA[i])
-                child.partitionB.append(graph1.partitionB[i])
-    if len(child.partitionA) != len(graph1.partitionA) or len(child.partitionB) != len(graph1.partitionB):
-        print("Error child partition length is ", len(child.partitionA))
+def uniform_crossover(graph1, graph2, child):
+    
+    h_distance = hamming_distance(graph1, graph2)
+
+    if h_distance > graph1.intTotV/2:
+        graph2.invert_bits()
+    newValue = None
+    for node in graph1.lstKeys:
+        if graph1.dictPart[node] == graph2.dictPart[node]:
+            child.dictPart[node] = graph1.dictPart[node]
+        elif newValue == None: # If no value is stored
+            newValue = random.randint(0, 1)  # Randomly choose partition
+            child.dictPart[node] = newValue
+        else: # If value is stored. Pick the other value
+            child.dictPart[node] = 1 - newValue
+            newValue = None
+
+    
+    partition_sum = sum(child.dictPart.values())  # Sum all values (0s and 1s)
+    expected_sum = len(child.dictPart) // 2  # Should be half of total nodes
+    
+    if partition_sum != expected_sum:
+        print(f"Error: Partitions not balanced. Sum of partition B = {partition_sum}, Expected = {expected_sum}")
         exit()
     return child
 
