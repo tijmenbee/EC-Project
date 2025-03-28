@@ -117,22 +117,27 @@ def random_perturbation(Graph, mutation_rate):
             
     return Graph
 
-def genetic_local_search(objGraph, population_size, max_passes):
+def genetic_local_search(objGraph, population_size, max_passes, showOutput = True, blnAllowMutation = False, mutation_rate = 0.2):
     population = []
     for i in range(population_size):
-        print("Growing population: ", i, "of", population_size)
+        if showOutput:
+            print("Growing population: ", i, "of", population_size)
         Graph = objGraph()
         Graph, _ = local_search(Graph)
         population.append({"Graph": Graph, "fitness": Graph.fitness, "FM_passes": Graph.FM_passes})
-    print([x["fitness"] for x in population])
+
     intTotalFM_passes = sum([x["FM_passes"] for x in population])
     while intTotalFM_passes < max_passes:
         best_fitness = min(population, key=lambda x: x["fitness"])["fitness"]
-        print(f"FM_passes: {intTotalFM_passes}, Best fitness: {best_fitness}, Average Fitness: {sum([x['fitness'] for x in population])/len(population)}")
+
+        if showOutput:
+            print(f"FM_passes: {intTotalFM_passes}, Best fitness: {best_fitness}, Average Fitness: {sum([x['fitness'] for x in population])/len(population)}")
         parent1, parent2 = random.sample(population, 2)
         child = uniform_crossover(parent1["Graph"], parent2["Graph"], objGraph())
         child.free_nodes()
         child, _ = local_search(child)
+        if blnAllowMutation:
+            child = random_perturbation(child, mutation_rate)
         intTotalFM_passes = child.FM_passes + intTotalFM_passes
         if child.fitness <= max(population, key=lambda x: x["fitness"])["fitness"]:
             population.remove(max(population, key=lambda x: x["fitness"]))
@@ -143,8 +148,8 @@ def genetic_local_search(objGraph, population_size, max_passes):
         else: stop_counter = 0
         if stop_counter == 100: break
 
-    print(f"Max fitness: ", min(population, key=lambda x: x["fitness"])["fitness"])   
-    return max(population, key=lambda x: x["fitness"])["Graph"]
+    if showOutput: print(f"Max fitness: ", min(population, key=lambda x: x["fitness"])["fitness"])   
+    return min(population, key=lambda x: x["fitness"])["Graph"]
 
 def hamming_distance(graph1, graph2):
     # Calculate number of positions where partitions differ between two graphs
